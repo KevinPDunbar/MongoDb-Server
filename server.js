@@ -257,16 +257,10 @@ app.post('/api/loginUser', function(req, res) {
         }, function(err, post) {
 
             //
-             User.find({
-            _id : user.following
-        }, function(err, users) {
-            this.users = users;
-            console.log("USERS FROM F " + users);
-           
-        });
+       
             //
             res.json(post);           
-        });
+        }).sort({date: -1});
 
             
         });
@@ -356,7 +350,7 @@ app.post('/api/loginUser', function(req, res) {
  
         console.log("creating comment...");
  
-        // create a review, information comes from request from Ionic
+        
         Comment.create({
             userId : req.body.userId,
             postId : req.body.postId,
@@ -372,7 +366,72 @@ app.post('/api/loginUser', function(req, res) {
         });
  
     });
+
+    
+          //Delete post
+    app.post('/api/deletePost', function(req, res) {
  
+        console.log("deleting post...");
+
+        let id = req.body.postId;
+        console.log("The passed in post Id: " + id);
+
+       
+
+
+         Post.findOneAndRemove({
+            _id : id
+        }, function(err, comment) {
+ 
+            res.send("comment deleted");
+            
+            
+        });
+
+           
+ 
+    });
+
+    //Unfollow user
+    app.post('/api/unfollowUser', function(req, res) {
+
+  let userId = req.body.userId;
+  let idToFollow = req.body.idToFollow;
+
+  console.log("MY ID: " + userId);
+  console.log("ID to unfollow: " + idToFollow);
+
+	User.update( 
+	  {_id: userId}, 
+	  { $pull: {following: idToFollow } } 
+	)
+	.then( err => {
+	  res.json(err);
+	});
+		res.json("unfollowed");
+	});
+
+	//Follow user
+    app.post('/api/followUser', function(req, res) {
+
+  let userId = req.body.userId;
+  let idToFollow = req.body.idToFollow;
+
+  console.log("MY ID: " + userId);
+  console.log("ID to follow: " + idToFollow);
+
+	  User
+	.update( 
+	  {_id: userId}, 
+	  { $push: {following: idToFollow } } 
+	)
+	.then( err => {
+	  
+	});
+		res.json("Followed");
+	});
+
+  
 // listen (start app with node server.js) ======================================
 app.listen(8000);
 console.log("App listening on port 8000");
