@@ -53,7 +53,20 @@ let Comment = mongoose.model('Comment', {
     text: String,
 });
 
+let Like = mongoose.model('Like', {
+    userId: String,
+    postId: String,
+});
 
+let Notification = mongoose.model('Notification', {
+    commentOwnerId: String,
+    date: Date,
+    postId: String,
+    pusherId: String,
+    read: Boolean,
+    recieveId: String,
+    subject: String
+});
  
 // Routes
 
@@ -159,7 +172,7 @@ app.post('/api/loginUser', function(req, res) {
                 res.send(err);
 
  
-            res.send(JSON.stringify("Post Created" + Post));
+            //res.send(JSON.stringify("Post Created" + Post));
         });
  
     });
@@ -197,16 +210,16 @@ app.post('/api/loginUser', function(req, res) {
     //Get User By Id
     app.post('/api/getUserById', function(req, res) {
  
-        console.log("fetching user");
+        //console.log("fetching user");
 
         let id = req.body.userId;
-        console.log("The passed in User Id: " + id);
+       // console.log("The passed in User Id: " + id);
 
          User.findOne({
             _id : id
         }, function(err, user) {
  
-            console.log(user);
+           // console.log(user);
             res.json(user);
             res.send();
         });
@@ -217,16 +230,16 @@ app.post('/api/loginUser', function(req, res) {
     //Get Users Posts By Their Id
     app.post('/api/getUsersPosts', function(req, res) {
  
-        console.log("fetching users posts");
+       // console.log("fetching users posts");
 
         let id = req.body.userId;
-        console.log("The passed in User Id: " + id);
+       // console.log("The passed in User Id: " + id);
 
          Post.find({
             userId : id
         }, function(err, posts) {
  
-            console.log(posts);
+            //console.log(posts);
             res.json(posts);
             res.send();
         }).sort({date: -1});
@@ -248,8 +261,8 @@ app.post('/api/loginUser', function(req, res) {
             _id : id
         }, function(err, user) {
  
-            console.log(user);
-            console.log("User Following: " + user.following);
+           // console.log(user);
+           // console.log("User Following: " + user.following);
             userfollowing = user.following
 
             Post.find({
@@ -273,10 +286,10 @@ app.post('/api/loginUser', function(req, res) {
     //Get Users By Search
     app.post('/api/SearchUsers', function(req, res) {
  
-        console.log("fetching user");
+        //console.log("fetching user");
 
         let query = req.body;
-        console.log("The search term is: " + query.term);
+       // console.log("The search term is: " + query.term);
 
          User.find({
             firstName : {$regex : ".*" + query.term + ".*"}
@@ -288,7 +301,7 @@ app.post('/api/loginUser', function(req, res) {
                 res.send();
             }
  
-            console.log(user);
+            //console.log(user);
             
         });
  
@@ -297,10 +310,10 @@ app.post('/api/loginUser', function(req, res) {
       //Get a post and user by post Id
     app.post('/api/getPostById', function(req, res) {
  
-        console.log("fetching post");
+        //console.log("fetching post");
 
         let id = req.body._id;
-        console.log("The passed in post Id: " + id);
+       // console.log("The passed in post Id: " + id);
 
         let userId;
         let users;
@@ -310,7 +323,7 @@ app.post('/api/loginUser', function(req, res) {
         }, function(err, post) {
  
             res.json(post);
-            console.log("post");
+            //console.log("post");
             
         });
 
@@ -321,10 +334,10 @@ app.post('/api/loginUser', function(req, res) {
           //Get all the comments from a post Id
     app.post('/api/getCommentsById', function(req, res) {
  
-        console.log("fetching comments...");
+        //console.log("fetching comments...");
 
         let id = req.body._id;
-        console.log("The passed in post Id: " + id);
+        //console.log("The passed in post Id: " + id);
 
        
 
@@ -335,10 +348,10 @@ app.post('/api/loginUser', function(req, res) {
         }, function(err, comment) {
  
             res.json(comment);
-            console.log("PASSED BACK comment " + comment);
-            console.log("PASSED BACK comment " + comment.length);
-            console.log("PASSED BACK comment " + comment.text);
-            console.log("PASSED BACK comment user Id " + comment.userId);
+            //console.log("PASSED BACK comment " + comment);
+            //console.log("PASSED BACK comment " + comment.length);
+            //console.log("PASSED BACK comment " + comment.text);
+            //console.log("PASSED BACK comment user Id " + comment.userId);
             
         });
 
@@ -348,7 +361,7 @@ app.post('/api/loginUser', function(req, res) {
 
     app.post('/api/newComment', function(req, res) {
  
-        console.log("creating comment...");
+        //console.log("creating comment...");
  
         
         Comment.create({
@@ -374,7 +387,7 @@ app.post('/api/loginUser', function(req, res) {
         console.log("deleting post...");
 
         let id = req.body.postId;
-        console.log("The passed in post Id: " + id);
+        //console.log("The passed in post Id: " + id);
 
        
 
@@ -398,8 +411,8 @@ app.post('/api/loginUser', function(req, res) {
   let userId = req.body.userId;
   let idToFollow = req.body.idToFollow;
 
-  console.log("MY ID: " + userId);
-  console.log("ID to unfollow: " + idToFollow);
+  //console.log("MY ID: " + userId);
+  //console.log("ID to unfollow: " + idToFollow);
 
 	User.update( 
 	  {_id: userId}, 
@@ -417,8 +430,8 @@ app.post('/api/loginUser', function(req, res) {
   let userId = req.body.userId;
   let idToFollow = req.body.idToFollow;
 
-  console.log("MY ID: " + userId);
-  console.log("ID to follow: " + idToFollow);
+  //console.log("MY ID: " + userId);
+  //console.log("ID to follow: " + idToFollow);
 
 	  User
 	.update( 
@@ -430,6 +443,173 @@ app.post('/api/loginUser', function(req, res) {
 	});
 		res.json("Followed");
 	});
+
+    app.post('/api/getUnreadCount', function(req, res) {
+ 
+        console.log("fetching notifications...");
+
+        let id = req.body.userId;
+
+         Notification.find({
+            recieveId : id,
+            read: false
+        }, function(err, notification) {
+ 
+            res.json(notification);
+                  
+        });
+
+    });
+
+    app.post('/api/getAllNotifications', function(req, res) {
+ 
+        console.log("fetching notifications...");
+
+        let id = req.body.userId;
+
+         Notification.find({
+            recieveId : id
+        }, function(err, notification) {
+ 
+            res.json(notification);
+                  
+        }).sort({date: -1});
+
+    });
+
+    app.post('/api/newNotification', function(req, res) {
+ 
+        console.log("creating notification...");
+ 
+        
+        Notification.create({
+            commentOwnerId: req.body.commentOwnerId,
+   			date: req.body.date,
+		    postId: req.body.postId,
+		    pusherId: req.body.pusherId,
+		    read: req.body.read,
+		    recieveId: req.body.recieveId,
+		    subject: req.body.subject,
+            done : false
+        }, function(err, notification) {
+            if (err)
+                res.send(err);
+
+ 
+            res.send(JSON.stringify("Notification created" + notification));
+        });
+ 
+    });
+
+    //Update Profile Information
+    app.post('/api/setNotificationAsRead', function(req, res) {
+  let updatedNotification = {
+       read: true
+  };
+  Notification.update({_id: req.body._id}, updatedNotification, function(err, raw) {
+    if (err) {
+      res.send(err);
+    }
+    res.send(raw);
+  });
+});
+
+        //Get all the likes from a post Id
+    app.post('/api/getLikesById', function(req, res) {
+ 
+        let id = req.body._id;
+        
+        console.log("FIND Likes WITH: " + id);
+
+         Like.find({
+            postId : id
+        }, function(err, like) {
+ 
+            res.json(like);
+            
+        });      
+ 
+    });
+
+app.post('/api/likePost', function(req, res) {
+
+
+Like.create({
+    userId : req.body.userId,
+    postId : req.body.postId,
+    done : false
+}, function(err, like) {
+    if (err)
+        res.send(err);
+
+    Post.findOne({
+        _id : req.body.postId
+    }, function(err, post) {
+
+        console.log("score is: " + post.score);
+        let score = post.score;
+        score++;
+         let updatedPost = {
+		       score: score
+		  };
+
+		  Post.update({_id: req.body.postId}, updatedPost, function(err, raw) {
+	    if (err) {
+	      
+	    }
+	    
+	  });
+
+
+        
+    });
+      
+
+    res.send(JSON.stringify("Like created" + like));
+});
+
+});
+
+app.post('/api/unlikePost', function(req, res) {
+
+
+Like.findOneAndRemove({
+    postId : req.body.postId,
+    userId : req.body.userId
+}, function(err, like) {
+    if (err)
+        res.send(err);
+
+    Post.findOne({
+        _id : req.body.postId
+    }, function(err, post) {
+
+        console.log("score is: " + post.score);
+        let score = post.score;
+        score--;
+         let updatedPost = {
+		       score: score
+		  };
+
+		  Post.update({_id: req.body.postId}, updatedPost, function(err, raw) {
+	    if (err) {
+	      
+	    }
+	    
+	  });
+
+
+        
+    });
+      
+
+    res.send(JSON.stringify("Like created" + like));
+});
+
+});
+ 
+
+    
 
   
 // listen (start app with node server.js) ======================================
