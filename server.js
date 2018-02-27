@@ -6,6 +6,9 @@ var morgan = require('morgan');             // log requests to the console (expr
 var bodyParser = require('body-parser');    // pull information from HTML POST (express4)
 var methodOverride = require('method-override'); // simulate DELETE and PUT (express4)
 var cors = require('cors');
+
+var bcrypt = require('bcrypt');
+var SALT_WORK_FACTOR = 10;
  
 // Configuration
 mongoose.connect('mongodb://localhost/SocialMedia');
@@ -89,17 +92,20 @@ app.post('/api/loginUser', function(req, res) {
             for(let i = 0; i < users.length; i++)
             {
                 console.log("Password return" + users[i].password);
-                if(email === users[i].email && password === users[i].password)
-                {
-                    console.log("Login Valid");
-                    res.json(users[i]);
-                    //break;
-                }
-                else
-                {
-                    console.log("Invalid");
-                    //res.json(users);
-                }
+
+             	//
+             	bcrypt.compare(password, users[i].password, function(err, isMatch) {
+	                
+	                console.log('Is password match :', isMatch);
+
+	                if (isMatch && email === users[i].email) {
+	                	console.log("User and Password Match, send user back");
+	                    res.json(users[i]);
+	                } else {
+	                    console.log("Invalid Login")
+	                }
+            	});
+             
 
             }
  
@@ -120,20 +126,56 @@ app.post('/api/loginUser', function(req, res) {
                 res.send(err)
  
             res.json(users); // return all reviews in JSON format
-        });
+        }).select("-password");
     });
  
     
     app.post('/api/createUser', function(req, res) {
  
         console.log("creating user");
+
+        let userPassword = req.body.password;
+        let newPassword;
+        let firstName = req.body.firstName;
+        let lastName = req.body.lastName;
+        let email = req.body.email;
+        let profilePicture = "https://firebasestorage.googleapis.com/v0/b/login-2aa53.appspot.com/o/anon_user.gif?alt=media&token=723b0c9d-76a6-40ea-ba67-34e058447c0a";
+
+        bcrypt.genSalt(SALT_WORK_FACTOR, function(err, salt) {
+	        if (err) return next(err);
+
+	        // hash the password along with our new salt
+	        bcrypt.hash(userPassword, salt, function(err, hash) {
+	            if (err) return next(err);
+
+	            // override the cleartext password with the hashed one
+	            newPassword = hash;
+	            //
+	             User.create({
+		            firstName : firstName,
+		            lastName : lastName,
+		            email: email,
+		            password: newPassword,
+		            profilePicture: profilePicture,
+		            done : false
+		        }, function(err, user) {
+		            if (err)
+		                res.send(err);
+
+		 
+		            res.send(JSON.stringify("User Created" + User));
+		        });
+	            //
+	        });
+	    });
+        //
  
         // create a review, information comes from request from Ionic
-        User.create({
+       /* User.create({
             firstName : req.body.firstName,
             lastName : req.body.lastName,
             email: req.body.email,
-            password: req.body.password,
+            password: newPassword,
             profilePicture: "https://firebasestorage.googleapis.com/v0/b/login-2aa53.appspot.com/o/anon_user.gif?alt=media&token=723b0c9d-76a6-40ea-ba67-34e058447c0a",
             done : false
         }, function(err, user) {
@@ -142,7 +184,7 @@ app.post('/api/loginUser', function(req, res) {
 
  
             res.send(JSON.stringify("User Created" + User));
-        });
+        }); */
  
     });
  
@@ -222,7 +264,7 @@ app.post('/api/loginUser', function(req, res) {
            // console.log(user);
             res.json(user);
             res.send();
-        });
+        }).select("-password");
  
     });
 
@@ -276,7 +318,7 @@ app.post('/api/loginUser', function(req, res) {
         }).sort({date: -1});
 
             
-        });
+        }).select("-password");
 
            
  
@@ -303,7 +345,7 @@ app.post('/api/loginUser', function(req, res) {
  
             //console.log(user);
             
-        });
+        }).select("-password").sort({firstName: 'asc'});
  
     });
 
