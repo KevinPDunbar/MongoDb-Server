@@ -20,5 +20,10 @@
     "mongoose": "^4.6.2",
     "morgan": "^1.7.0",
     "superlogin": "^0.6.1"
+  },
+  "dependencies": {
+    "grid-fs": "^1.0.1",
+    "multer": "^1.3.0",
+    "multer-gridfs-storage": "^3.0.0"
   }
 }

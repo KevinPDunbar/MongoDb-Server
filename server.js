@@ -7,11 +7,21 @@ var bodyParser = require('body-parser');    // pull information from HTML POST (
 var methodOverride = require('method-override'); // simulate DELETE and PUT (express4)
 var cors = require('cors');
 
+
+
 var bcrypt = require('bcrypt');
 var SALT_WORK_FACTOR = 10;
- 
+
 // Configuration
 mongoose.connect('mongodb://localhost/SocialMedia');
+
+var conn = mongoose.connection;
+var multer = require('multer');
+var GridFsStorage = require('multer-gridfs-storage');
+var Grid = require('gridfs-stream');
+Grid.mongo = mongoose.mongo;
+var gfs = Grid(conn.db);
+
 
 //'mongodb://KevinDunbar:woodward1@ds121118.mlab.com:21118/socialmedia'
 //'mongodb://localhost/SocialMedia'
@@ -29,6 +39,59 @@ app.use(function(req, res, next) {
    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
    next();
 });
+
+/** Setting up storage using multer-gridfs-storage */
+var storage = GridFsStorage({
+  gfs : gfs,
+  filename: function (req, file, cb) {
+    var datetimestamp = Date.now();
+    cb(null, file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length -1]);
+  },
+  /** With gridfs we can store aditional meta-data along with the file */
+  metadata: function(req, file, cb) {
+    cb(null, { originalname: file.originalname });
+  },
+  root: 'ctFiles' //root name for collection to store files into
+});
+
+var upload = multer({ //multer settings for single upload
+  storage: storage
+}).single('file');
+
+/** API path that will upload the files */
+app.post('/api/upload', function(req, res) {
+  upload(req,res,function(err){
+    if(err){
+      res.json({error_code:1,err_desc:err});
+      return;
+    }
+    res.json({error_code:0,err_desc:null});
+  });
+});
+
+app.get('/file/:filename', function(req, res){
+        gfs.collection('ctFiles'); //set collection name to lookup into
+
+        /** First check if file exists */
+        gfs.files.find({filename: req.params.filename}).toArray(function(err, files){
+            if(!files || files.length === 0){
+                return res.status(404).json({
+                    responseCode: 1,
+                    responseMessage: "error"
+                });
+            }
+            /** create read stream */
+            var readstream = gfs.createReadStream({
+                filename: files[0].filename,
+                root: "ctFiles"
+            });
+            /** set the proper content type */
+            res.set('Content-Type', files[0].contentType)
+            /** return response */
+            return readstream.pipe(res);
+        });
+    });
+
  
 // Models
 let User = mongoose.model('User', {
@@ -46,7 +109,8 @@ let Post = mongoose.model('Post', {
     text: String,
     date: Date,
     score: Number,
-    image: String
+    image: String,
+    video: Object,
 });
 
 let Comment = mongoose.model('Comment', {
@@ -197,11 +261,12 @@ app.post('/api/loginUser', function(req, res) {
         });
     });
 
+
     app.post('/api/newPost', function(req, res) {
  
         console.log("creating psot");
- 
-        // create a review, information comes from request from Ionic
+
+        
         Post.create({
             userId : req.body.userId,
             text : req.body.text,
